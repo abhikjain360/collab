@@ -4,6 +4,8 @@
     "type": "module",
     "scripts": {
         "dev": "bun run --watch src/index.ts",
+        "build": "bun build --compile src/index.ts --outfile bin/server",
+        "start": "./bin/server",
         "db:generate": "bunx drizzle-kit generate",
         "db:migrate": "bunx drizzle-kit migrate",
         "db:studio": "bunx drizzle-kit studio",

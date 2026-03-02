@@ -7,6 +7,10 @@
         "dev:server": "bun run --filter server dev",
         "check": "bun run --filter '*' check",
         "lint": "bun run --filter '*' lint",
+        "build": "bun run --filter '*' build",
+        "build:client": "bun run --filter client build",
+        "build:server": "bun run --filter server build",
+        "start:server": "bun run --filter server start",
         "fmt": "dprint fmt",
         "fmt:check": "dprint check"
     },
