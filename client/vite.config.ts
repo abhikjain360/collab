@@ -19,6 +19,7 @@ function rewriteRoutes(): Plugin {
 export default defineConfig({
     plugins: [rewriteRoutes()],
     build: {
+        outDir: "../dist/client",
         rollupOptions: {
             input: {
                 main: resolve(__dirname, "index.html"),

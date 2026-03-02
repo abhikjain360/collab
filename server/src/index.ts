@@ -1,4 +1,5 @@
 import { Elysia } from "elysia"
+import { persistAllRooms } from "./lib/rooms"
 import { authRoutes } from "./routes/auth"
 import { docRoutes } from "./routes/docs"
 import { wsHandler } from "./routes/ws"
@@ -24,5 +25,14 @@ const app = new Elysia()
     .listen(PORT)
 
 console.log(`collab server running on :${PORT}`)
+
+function shutdown() {
+    console.log("shutting down, persisting rooms...")
+    persistAllRooms()
+    process.exit(0)
+}
+
+process.on("SIGTERM", shutdown)
+process.on("SIGINT", shutdown)
 
 export type App = typeof app

@@ -9,4 +9,3 @@ data/
 .env*
 !.env.example
 !.env.development
-bin/

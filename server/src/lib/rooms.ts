@@ -183,6 +183,16 @@ export function getActiveCount(slug: string): number {
     return rooms.get(slug)?.conns.size ?? 0
 }
 
+export function persistAllRooms() {
+    for (const [slug, timer] of persistTimers) {
+        clearTimeout(timer)
+        persistTimers.delete(slug)
+    }
+    for (const [slug] of rooms) {
+        persistRoom(slug)
+    }
+}
+
 export function bootRoom(slug: string) {
     const room = rooms.get(slug)
     if (!room) return
