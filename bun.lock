@@ -4,11 +4,15 @@
   "workspaces": {
     "": {
       "name": "collab",
+      "devDependencies": {
+        "@typescript/native-preview": "^7.0.0-dev.20260302.1",
+      },
     },
     "client": {
       "name": "client",
       "dependencies": {
         "@catppuccin/codemirror": "^1.0.3",
+        "@codemirror/autocomplete": "^6.20.1",
         "@codemirror/commands": "^6.10.2",
         "@codemirror/lang-cpp": "^6.0.3",
         "@codemirror/lang-javascript": "^6.2.5",
@@ -17,6 +21,8 @@
         "@codemirror/lang-rust": "^6.0.2",
         "@codemirror/language": "^6.12.2",
         "@codemirror/language-data": "^6.5.2",
+        "@codemirror/lint": "^6.9.5",
+        "@codemirror/search": "^6.6.0",
         "@codemirror/state": "^6.5.4",
         "@codemirror/view": "^6.39.16",
         "@elysiajs/eden": "^1.4.8",

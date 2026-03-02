@@ -1,17 +1,37 @@
 import "./style.css"
 import { catppuccinMocha } from "@catppuccin/codemirror"
+import { autocompletion, closeBrackets, closeBracketsKeymap, completionKeymap } from "@codemirror/autocomplete"
 import { indentWithTab } from "@codemirror/commands"
+import { defaultKeymap, history, historyKeymap } from "@codemirror/commands"
 import { cpp } from "@codemirror/lang-cpp"
 import { javascript } from "@codemirror/lang-javascript"
 import { markdown } from "@codemirror/lang-markdown"
 import { python } from "@codemirror/lang-python"
 import { rust } from "@codemirror/lang-rust"
 import { indentUnit } from "@codemirror/language"
+import {
+    bracketMatching,
+    defaultHighlightStyle,
+    foldGutter,
+    foldKeymap,
+    indentOnInput,
+    syntaxHighlighting,
+} from "@codemirror/language"
 import { languages } from "@codemirror/language-data"
+import { lintKeymap } from "@codemirror/lint"
+import { highlightSelectionMatches, searchKeymap } from "@codemirror/search"
 import { Compartment, EditorState } from "@codemirror/state"
-import { keymap } from "@codemirror/view"
+import {
+    crosshairCursor,
+    drawSelection,
+    dropCursor,
+    highlightSpecialChars,
+    keymap,
+    lineNumbers,
+    rectangularSelection,
+} from "@codemirror/view"
 import { vim } from "@replit/codemirror-vim"
-import { basicSetup, EditorView } from "codemirror"
+import { EditorView } from "codemirror"
 import { yCollab } from "y-codemirror.next"
 import { WebsocketProvider } from "y-websocket"
 import * as Y from "yjs"
@@ -163,9 +183,11 @@ async function init() {
         params: { token },
     })
 
+    const userColor = nameToColor(displayName)
     wsProvider.awareness.setLocalStateField("user", {
         name: displayName,
-        color: nameToColor(displayName),
+        color: userColor,
+        colorLight: userColor.replace(")", ", 0.2)").replace("hsl(", "hsla("),
     })
 
     // Update collaborator badges on awareness change
@@ -182,8 +204,31 @@ async function init() {
         parent: document.getElementById("editor")!,
         extensions: [
             vim(),
-            basicSetup,
-            keymap.of([indentWithTab]),
+            lineNumbers(),
+            highlightSpecialChars(),
+            history(),
+            foldGutter(),
+            drawSelection(),
+            dropCursor(),
+            EditorState.allowMultipleSelections.of(true),
+            indentOnInput(),
+            syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+            bracketMatching(),
+            closeBrackets(),
+            autocompletion(),
+            rectangularSelection(),
+            crosshairCursor(),
+            highlightSelectionMatches(),
+            keymap.of([
+                ...closeBracketsKeymap,
+                ...defaultKeymap,
+                ...searchKeymap,
+                ...historyKeymap,
+                ...foldKeymap,
+                ...completionKeymap,
+                ...lintKeymap,
+                indentWithTab,
+            ]),
             EditorState.tabSize.of(4),
             indentUnit.of("    "),
             langCompartment.of(initialLangExt),

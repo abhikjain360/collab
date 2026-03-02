@@ -86,7 +86,7 @@ export const authRoutes = new Elysia({ prefix: "/api" })
             return { error: "No refresh token" }
         }
 
-        const refreshHash = await hashToken(refreshValue)
+        const refreshHash = await hashToken(refreshValue as string)
         const stored = db
             .select()
             .from(refreshTokens)
@@ -109,7 +109,7 @@ export const authRoutes = new Elysia({ prefix: "/api" })
     .post("/auth/logout", async ({ cookie }) => {
         const refreshValue = cookie.refresh?.value
         if (refreshValue) {
-            const refreshHash = await hashToken(refreshValue)
+            const refreshHash = await hashToken(refreshValue as string)
             db.delete(refreshTokens)
                 .where(eq(refreshTokens.tokenHash, refreshHash))
                 .run()
@@ -126,7 +126,7 @@ export const authRoutes = new Elysia({ prefix: "/api" })
             return { error: "Unauthorized" }
         }
 
-        const payload = await jwt.verify(session, JWT_SECRET)
+        const payload = await jwt.verify(session as string, JWT_SECRET)
         if (!payload) {
             set.status = 401
             return { error: "Unauthorized" }
