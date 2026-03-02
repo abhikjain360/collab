@@ -6,4 +6,5 @@ data/
 *.db
 *.db-journal
 *.db-wal
-.env
+.env*
+!.env.example
