@@ -1,0 +1,239 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    font-family: "JetBrains Mono", monospace;
+    background: #1e1e1e;
+    color: #d4d4d4;
+}
+
+#app {
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+a {
+    color: #569cd6;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+button {
+    font-family: inherit;
+    font-size: inherit;
+    cursor: pointer;
+    background: #333;
+    color: #d4d4d4;
+    border: 1px solid #555;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+}
+
+button:hover {
+    background: #444;
+}
+
+input {
+    font-family: inherit;
+    font-size: inherit;
+    background: #2d2d2d;
+    color: #d4d4d4;
+    border: 1px solid #555;
+    padding: 0.5rem;
+    border-radius: 4px;
+    outline: none;
+}
+
+input:focus {
+    border-color: #569cd6;
+}
+
+/* Login */
+.login-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.login-container h1 {
+    font-size: 1.5rem;
+    font-weight: 400;
+    color: #888;
+}
+
+.login-container input {
+    width: 300px;
+    text-align: center;
+}
+
+.login-container .error {
+    color: #f44747;
+    font-size: 0.85rem;
+}
+
+/* Dashboard */
+.dashboard {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+    width: 100%;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.dashboard-header h1 {
+    font-size: 1.2rem;
+    font-weight: 400;
+    color: #888;
+}
+
+.doc-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.doc-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    background: #252526;
+    border-radius: 4px;
+    border: 1px solid #333;
+}
+
+.doc-row:hover {
+    border-color: #555;
+}
+
+.doc-title {
+    flex: 1;
+    cursor: pointer;
+}
+
+.doc-title:hover {
+    color: #569cd6;
+}
+
+.doc-meta {
+    color: #666;
+    font-size: 0.8rem;
+}
+
+.doc-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.doc-actions button {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.active-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #4ec9b0;
+    display: inline-block;
+}
+
+/* Editor */
+.editor-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.editor-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 1rem;
+    background: #252526;
+    border-bottom: 1px solid #333;
+    min-height: 40px;
+}
+
+.editor-topbar .title {
+    font-size: 0.9rem;
+    color: #888;
+}
+
+.collaborators {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.collaborator-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+}
+
+.collaborator-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.cm-editor {
+    flex: 1;
+    overflow: auto;
+}
+
+.cm-editor .cm-scroller {
+    font-family: "JetBrains Mono", monospace !important;
+}
+
+/* Name modal */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+
+.modal {
+    background: #252526;
+    border: 1px solid #555;
+    border-radius: 8px;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+}
+
+.modal h2 {
+    font-size: 1rem;
+    font-weight: 400;
+    color: #888;
+}
+
+.modal input {
+    width: 250px;
+    text-align: center;
+}
