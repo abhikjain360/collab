@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.direnv/
+result
+data/
+*.db
+*.db-journal
+*.db-wal
+.env
