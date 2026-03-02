@@ -1,7 +1,15 @@
 import "./style.css"
+import { catppuccinMocha } from "@catppuccin/codemirror"
+import { indentWithTab } from "@codemirror/commands"
+import { cpp } from "@codemirror/lang-cpp"
+import { javascript } from "@codemirror/lang-javascript"
 import { markdown } from "@codemirror/lang-markdown"
+import { python } from "@codemirror/lang-python"
+import { rust } from "@codemirror/lang-rust"
+import { indentUnit } from "@codemirror/language"
 import { languages } from "@codemirror/language-data"
-import { oneDark } from "@codemirror/theme-one-dark"
+import { Compartment, EditorState } from "@codemirror/state"
+import { keymap } from "@codemirror/view"
 import { vim } from "@replit/codemirror-vim"
 import { basicSetup, EditorView } from "codemirror"
 import { yCollab } from "y-codemirror.next"
@@ -10,6 +18,18 @@ import * as Y from "yjs"
 import { api } from "./api"
 
 const app = document.getElementById("app")!
+
+const langOptions: Record<string, () => ReturnType<typeof markdown>> = {
+    "markdown": () => markdown({ codeLanguages: languages }),
+    "typescript": () => javascript({ typescript: true }),
+    "javascript": () => javascript(),
+    "python": () => python(),
+    "c": () => cpp(),
+    "c++": () => cpp(),
+    "rust": () => rust(),
+    "bash": () => (languages.find(l => l.name === "Shell")!).support!,
+    "dockerfile": () => (languages.find(l => l.name === "Dockerfile")!).support!,
+}
 
 function nameToColor(name: string): string {
     let hash = 0
@@ -32,7 +52,7 @@ function showError(message: string) {
     app.innerHTML = `
         <div class="login-container">
             <h1>collab</h1>
-            <div style="color:#f44747">${message}</div>
+            <div style="color:var(--ctp-red)">${message}</div>
         </div>
     `
 }
@@ -107,6 +127,7 @@ async function init() {
     }
 
     const title = (data as any).title || "Untitled"
+    const savedLang: string = (data as any).language || "markdown"
 
     // Get display name
     let displayName = localStorage.getItem("collab-display-name")
@@ -115,11 +136,19 @@ async function init() {
     }
 
     // Set up editor chrome
+    const initialLang = langOptions[savedLang] ? savedLang : "markdown"
+    const langSelectOptions = Object.keys(langOptions)
+        .map(l => `<option value="${l}"${l === initialLang ? " selected" : ""}>${l}</option>`)
+        .join("")
+
     app.innerHTML = `
         <div class="editor-container">
             <div class="editor-topbar">
                 <span class="title">${title}</span>
-                <div class="collaborators"></div>
+                <div class="controls">
+                    <select class="lang-select" id="lang-select">${langSelectOptions}</select>
+                    <div class="collaborators"></div>
+                </div>
             </div>
             <div id="editor"></div>
         </div>
@@ -144,20 +173,39 @@ async function init() {
         renderCollaborators(wsProvider.awareness)
     })
 
+    // Language compartment for hot-swapping
+    const langCompartment = new Compartment()
+
     // CodeMirror setup
-    const _editor = new EditorView({
+    const initialLangExt = langOptions[initialLang]()
+    const editor = new EditorView({
         parent: document.getElementById("editor")!,
         extensions: [
             vim(),
             basicSetup,
-            markdown({ codeLanguages: languages }),
-            oneDark,
+            keymap.of([indentWithTab]),
+            EditorState.tabSize.of(4),
+            indentUnit.of("    "),
+            langCompartment.of(initialLangExt),
+            catppuccinMocha,
             yCollab(ytext, wsProvider.awareness),
             EditorView.theme({
                 "&": { height: "100%", flex: "1" },
                 ".cm-scroller": { overflow: "auto" },
             }),
         ],
+    })
+
+    // Language switcher
+    document.getElementById("lang-select")!.addEventListener("change", (e) => {
+        const lang = (e.target as HTMLSelectElement).value
+        const langFn = langOptions[lang]
+        if (langFn) {
+            editor.dispatch({
+                effects: langCompartment.reconfigure(langFn()),
+            })
+            api.api.docs({ slug }).language.post({ token, language: lang })
+        }
     })
 }
 

@@ -42,8 +42,8 @@ export const wsHandler = new Elysia()
                 return
             }
 
-            room.conns.set(ws, new Set())
-            sendSyncStep1(room, ws)
+            room.conns.set(ws.raw, new Set())
+            sendSyncStep1(room, ws.raw)
         },
         message(ws, message) {
             const slug = (ws.data as any).params.slug
@@ -51,10 +51,10 @@ export const wsHandler = new Elysia()
             const data = message instanceof ArrayBuffer
                 ? new Uint8Array(message)
                 : new Uint8Array(message as any)
-            handleMessage(room, ws, data)
+            handleMessage(room, ws.raw, data)
         },
         close(ws) {
             const slug = (ws.data as any).params.slug
-            removeConnection(slug, ws)
+            removeConnection(slug, ws.raw)
         },
     })

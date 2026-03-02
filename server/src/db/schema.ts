@@ -5,6 +5,7 @@ export const documents = sqliteTable("documents", {
     slug: text("slug").unique().notNull(),
     token: text("token").notNull(),
     title: text("title").notNull().default("Untitled"),
+    language: text("language").notNull().default("markdown"),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
     updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
 })

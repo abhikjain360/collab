@@ -1,0 +1,1 @@
+ALTER TABLE `documents` ADD `language` text DEFAULT 'markdown' NOT NULL;

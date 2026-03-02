@@ -38,6 +38,10 @@ async function requireAdmin(cookie: Record<string, any>, set: any): Promise<bool
 const createDocBody = z.object({ title: z.string().optional() })
 const renameDocBody = z.object({ title: z.string() })
 const validateTokenBody = z.object({ token: z.string() })
+const setLanguageBody = z.object({
+    token: z.string(),
+    language: z.string(),
+})
 
 export const docRoutes = new Elysia({ prefix: "/api" })
     // Public
@@ -59,7 +63,32 @@ export const docRoutes = new Elysia({ prefix: "/api" })
             return { error: "Invalid token" }
         }
 
-        return { ok: true, title: doc.title }
+        return { ok: true, title: doc.title, language: doc.language }
+    })
+    .post("/docs/:slug/language", ({ params, body, set }) => {
+        const parsed = setLanguageBody.safeParse(body)
+        if (!parsed.success) {
+            set.status = 400
+            return { error: "Invalid request" }
+        }
+
+        const doc = db
+            .select()
+            .from(documents)
+            .where(eq(documents.slug, params.slug))
+            .get()
+
+        if (!doc || doc.token !== parsed.data.token) {
+            set.status = 403
+            return { error: "Invalid token" }
+        }
+
+        db.update(documents)
+            .set({ language: parsed.data.language, updatedAt: new Date() })
+            .where(eq(documents.slug, params.slug))
+            .run()
+
+        return { ok: true }
     })
     // Admin
     .get("/docs", async ({ cookie, set }) => {

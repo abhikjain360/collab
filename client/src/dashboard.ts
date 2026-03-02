@@ -96,7 +96,7 @@ async function loadDocs() {
                 <span class="doc-title" data-action="open" data-slug="${doc.slug}" data-token="${doc.token}">
                     ${escapeHtml(doc.title)}
                 </span>
-                ${doc.activeCount > 0 ? `<span class="active-dot" title="${doc.activeCount} active"></span>` : ""}
+                ${doc.activeCount > 0 ? `<span class="active-count">${doc.activeCount} active</span>` : ""}
                 <span class="doc-meta">${doc.slug}</span>
                 <div class="doc-actions">
                     <button data-action="copy" data-slug="${doc.slug}" data-token="${doc.token}">copy link</button>
@@ -134,10 +134,10 @@ async function handleDocAction(e: Event) {
             break
         }
         case "rename": {
-            const title = prompt("New title:")
-            if (!title) return
-            await api.api.docs({ slug }).patch({ title })
-            await loadDocs()
+            const row = document.querySelector(`.doc-row[data-slug="${slug}"]`)
+            const titleSpan = row?.querySelector(".doc-title") as HTMLElement | null
+            if (!titleSpan) return
+            startInlineRename(slug, titleSpan)
             break
         }
         case "rotate": {
@@ -153,6 +153,34 @@ async function handleDocAction(e: Event) {
             break
         }
     }
+}
+
+function startInlineRename(slug: string, titleSpan: HTMLElement) {
+    const currentTitle = titleSpan.textContent?.trim() || ""
+    const input = document.createElement("input")
+    input.type = "text"
+    input.value = currentTitle
+    input.className = "rename-input"
+    titleSpan.replaceWith(input)
+    input.focus()
+    input.select()
+
+    let saved = false
+    async function save() {
+        if (saved) return
+        saved = true
+        const newTitle = input.value.trim()
+        if (newTitle && newTitle !== currentTitle) {
+            await api.api.docs({ slug }).patch({ title: newTitle })
+        }
+        await loadDocs()
+    }
+
+    input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") save()
+        if (e.key === "Escape") loadDocs()
+    })
+    input.addEventListener("blur", save)
 }
 
 function escapeHtml(str: string): string {
