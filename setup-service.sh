@@ -15,11 +15,11 @@ After=network.target
 [Service]
 Type=simple
 User=abhik
-WorkingDirectory=$PROJECT_DIR
-ExecStart=$BUN_PATH run --filter server start
+WorkingDirectory=$PROJECT_DIR/server
+EnvironmentFile=$PROJECT_DIR/server/.env.production
+ExecStart=$PROJECT_DIR/dist/server/server
 Restart=always
 RestartSec=5
-Environment=NODE_ENV=production
 
 [Install]
 WantedBy=multi-user.target
