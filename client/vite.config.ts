@@ -7,8 +7,8 @@ function rewriteRoutes(): Plugin {
         name: "rewrite-routes",
         configureServer(server) {
             server.middlewares.use((req, _res, next) => {
-                if (req.url?.startsWith("/d/")) {
-                    req.url = "/d.html"
+                if (req.url?.match(/^\/d\/.+/)) {
+                    req.url = "/d/index.html"
                 }
                 next()
             })
@@ -23,7 +23,7 @@ export default defineConfig({
         rollupOptions: {
             input: {
                 main: resolve(__dirname, "index.html"),
-                editor: resolve(__dirname, "d.html"),
+                editor: resolve(__dirname, "d/index.html"),
             },
         },
     },
