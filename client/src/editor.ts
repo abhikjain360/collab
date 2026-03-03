@@ -178,7 +178,7 @@ async function init() {
     const ydoc = new Y.Doc()
     const ytext = ydoc.getText("content")
 
-    const wsUrl = import.meta.env.VITE_WS_URL || "wss://api.collab.abhikja.in/ws"
+    const wsUrl = import.meta.env.VITE_WS_URL || "wss://collabapi.abhikja.in/ws"
     const wsProvider = new WebsocketProvider(wsUrl, slug, ydoc, {
         params: { token },
     })
