@@ -2,10 +2,13 @@ import { eq } from "drizzle-orm"
 import { Elysia } from "elysia"
 import { db } from "../db"
 import { documents } from "../db/schema"
+import { safeEqual } from "../lib/crypto"
 import { rateLimit } from "../lib/rate-limit"
-import { getOrCreateRoom, handleMessage, removeConnection, sendSyncStep1 } from "../lib/rooms"
+import { getOrCreateRoom, handleMessage, removeConnection, sendSyncStep1, type WSConn } from "../lib/rooms"
 
 const MAX_CONNS_PER_ROOM = 50
+
+type WsData = { params: { slug: string }; query: Record<string, string> }
 
 export const wsHandler = new Elysia()
     .ws("/ws/:slug", {
@@ -28,13 +31,13 @@ export const wsHandler = new Elysia()
                 .where(eq(documents.slug, params.slug))
                 .get()
 
-            if (!doc || doc.token !== token) {
+            if (!doc || !safeEqual(doc.token, token)) {
                 set.status = 403
                 return "Invalid token"
             }
         },
         open(ws) {
-            const slug = (ws.data as any).params.slug
+            const slug = (ws.data as WsData).params.slug
             const room = getOrCreateRoom(slug)
 
             if (room.conns.size >= MAX_CONNS_PER_ROOM) {
@@ -42,19 +45,19 @@ export const wsHandler = new Elysia()
                 return
             }
 
-            room.conns.set(ws.raw, new Set())
-            sendSyncStep1(room, ws.raw)
+            room.conns.set(ws.raw as WSConn, new Set())
+            sendSyncStep1(room, ws.raw as WSConn)
         },
         message(ws, message) {
-            const slug = (ws.data as any).params.slug
+            const slug = (ws.data as WsData).params.slug
             const room = getOrCreateRoom(slug)
-            const data = message instanceof ArrayBuffer
-                ? new Uint8Array(message)
-                : new Uint8Array(message as any)
-            handleMessage(room, ws.raw, data)
+            const data = message instanceof Uint8Array
+                ? message
+                : new Uint8Array(message as ArrayBuffer)
+            handleMessage(room, ws.raw as WSConn, data)
         },
         close(ws) {
-            const slug = (ws.data as any).params.slug
-            removeConnection(slug, ws.raw)
+            const slug = (ws.data as WsData).params.slug
+            removeConnection(slug, ws.raw as WSConn)
         },
     })

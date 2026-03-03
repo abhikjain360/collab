@@ -3,22 +3,15 @@ import { Elysia } from "elysia"
 import { z } from "zod"
 import { db } from "../db"
 import { documents, documentStates } from "../db/schema"
+import { env } from "../env"
+import { randomToken, safeEqual } from "../lib/crypto"
 import * as jwt from "../lib/jwt"
 import { bootRoom, getActiveCount } from "../lib/rooms"
-
-const JWT_SECRET = process.env.JWT_SECRET!
 
 function randomSlug(): string {
     const chars = "abcdefghijklmnopqrstuvwxyz0123456789"
     const bytes = crypto.getRandomValues(new Uint8Array(8))
     return Array.from(bytes, b => chars[b % chars.length]).join("")
-}
-
-function randomToken(): string {
-    return Array.from(
-        crypto.getRandomValues(new Uint8Array(32)),
-        b => b.toString(16).padStart(2, "0"),
-    ).join("")
 }
 
 async function requireAdmin(cookie: Record<string, any>, set: any): Promise<boolean> {
@@ -27,7 +20,7 @@ async function requireAdmin(cookie: Record<string, any>, set: any): Promise<bool
         set.status = 401
         return false
     }
-    const payload = await jwt.verify(session, JWT_SECRET)
+    const payload = await jwt.verify(session, env.JWT_SECRET)
     if (!payload) {
         set.status = 401
         return false
@@ -58,7 +51,7 @@ export const docRoutes = new Elysia({ prefix: "/api" })
             .where(eq(documents.slug, params.slug))
             .get()
 
-        if (!doc || doc.token !== parsed.data.token) {
+        if (!doc || !safeEqual(doc.token, parsed.data.token)) {
             set.status = 403
             return { error: "Invalid token" }
         }
@@ -78,7 +71,7 @@ export const docRoutes = new Elysia({ prefix: "/api" })
             .where(eq(documents.slug, params.slug))
             .get()
 
-        if (!doc || doc.token !== parsed.data.token) {
+        if (!doc || !safeEqual(doc.token, parsed.data.token)) {
             set.status = 403
             return { error: "Invalid token" }
         }

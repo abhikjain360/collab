@@ -3,32 +3,20 @@ import { Elysia } from "elysia"
 import { z } from "zod"
 import { db } from "../db"
 import { refreshTokens } from "../db/schema"
+import { env } from "../env"
+import { hashToken, randomToken, safeEqual } from "../lib/crypto"
 import * as jwt from "../lib/jwt"
 import { rateLimit } from "../lib/rate-limit"
 
-const JWT_SECRET = process.env.JWT_SECRET!
-const ADMIN_PASSPHRASE = process.env.ADMIN_PASSPHRASE!
 const SESSION_EXPIRY = 60 * 60 // 1 hour
 const REFRESH_EXPIRY = 7 * 24 * 60 * 60 // 7 days
 
 const loginBody = z.object({ passphrase: z.string() })
 
-async function hashToken(token: string): Promise<string> {
-    const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(token))
-    return Array.from(new Uint8Array(hash), b => b.toString(16).padStart(2, "0")).join("")
-}
-
-function randomToken(): string {
-    return Array.from(
-        crypto.getRandomValues(new Uint8Array(32)),
-        b => b.toString(16).padStart(2, "0"),
-    ).join("")
-}
-
 async function setAuthCookies(
     cookie: Record<string, any>,
 ): Promise<{ sessionToken: string }> {
-    const sessionToken = await jwt.sign({ role: "admin" }, JWT_SECRET, SESSION_EXPIRY)
+    const sessionToken = await jwt.sign({ role: "admin" }, env.JWT_SECRET, SESSION_EXPIRY)
     const refresh = randomToken()
     const refreshHash = await hashToken(refresh)
     const expiresAt = new Date(Date.now() + REFRESH_EXPIRY * 1000)
@@ -71,7 +59,7 @@ export const authRoutes = new Elysia({ prefix: "/api" })
             return { error: "Invalid request" }
         }
 
-        if (parsed.data.passphrase !== ADMIN_PASSPHRASE) {
+        if (!safeEqual(parsed.data.passphrase, env.ADMIN_PASSPHRASE)) {
             set.status = 401
             return { error: "Invalid passphrase" }
         }
@@ -126,7 +114,7 @@ export const authRoutes = new Elysia({ prefix: "/api" })
             return { error: "Unauthorized" }
         }
 
-        const payload = await jwt.verify(session as string, JWT_SECRET)
+        const payload = await jwt.verify(session as string, env.JWT_SECRET)
         if (!payload) {
             set.status = 401
             return { error: "Unauthorized" }

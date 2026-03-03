@@ -1,21 +1,24 @@
+const WINDOW_MS = 60_000
+const MAX_HITS = 10
+
 const hits = new Map<string, number[]>()
 
-export function rateLimit(ip: string, max = 10, windowMs = 60_000): boolean {
+export function rateLimit(ip: string): boolean {
     const now = Date.now()
     const timestamps = hits.get(ip) ?? []
-    const recent = timestamps.filter(t => now - t < windowMs)
-    if (recent.length >= max) return false
+    const recent = timestamps.filter(t => now - t < WINDOW_MS)
+    if (recent.length >= MAX_HITS) return false
     recent.push(now)
     hits.set(ip, recent)
     return true
 }
 
-// Prune expired entries every 60s
+// Prune expired entries periodically
 setInterval(() => {
     const now = Date.now()
     for (const [ip, timestamps] of hits) {
-        const recent = timestamps.filter(t => now - t < 60_000)
+        const recent = timestamps.filter(t => now - t < WINDOW_MS)
         if (recent.length === 0) hits.delete(ip)
         else hits.set(ip, recent)
     }
-}, 60_000)
+}, WINDOW_MS)

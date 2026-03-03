@@ -1,5 +1,6 @@
 import "./style.css"
 import { api } from "./api"
+import { escapeHtml } from "./utils"
 
 const app = document.getElementById("app")!
 
@@ -183,12 +184,6 @@ function startInlineRename(slug: string, titleSpan: HTMLElement) {
         if (e.key === "Escape") loadDocs()
     })
     input.addEventListener("blur", save)
-}
-
-function escapeHtml(str: string): string {
-    const div = document.createElement("div")
-    div.textContent = str
-    return div.innerHTML
 }
 
 // Init

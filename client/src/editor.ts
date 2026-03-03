@@ -36,6 +36,7 @@ import { yCollab } from "y-codemirror.next"
 import { WebsocketProvider } from "y-websocket"
 import * as Y from "yjs"
 import { api } from "./api"
+import { escapeHtml, sanitizeColor } from "./utils"
 
 const app = document.getElementById("app")!
 
@@ -47,8 +48,8 @@ const langOptions: Record<string, () => ReturnType<typeof markdown>> = {
     "c": () => cpp(),
     "c++": () => cpp(),
     "rust": () => rust(),
-    "bash": () => (languages.find(l => l.name === "Shell")!).support!,
-    "dockerfile": () => (languages.find(l => l.name === "Dockerfile")!).support!,
+    "bash": () => languages.find(l => l.name === "Shell")?.support ?? markdown(),
+    "dockerfile": () => languages.find(l => l.name === "Dockerfile")?.support ?? markdown(),
 }
 
 function nameToColor(name: string): string {
@@ -72,7 +73,7 @@ function showError(message: string) {
     app.innerHTML = `
         <div class="login-container">
             <h1>collab</h1>
-            <div style="color:var(--ctp-red)">${message}</div>
+            <div style="color:var(--ctp-red)">${escapeHtml(message)}</div>
         </div>
     `
 }
@@ -123,8 +124,8 @@ function renderCollaborators(awareness: WebsocketProvider["awareness"]) {
     container.innerHTML = users
         .map(u => `
             <span class="collaborator-badge">
-                <span class="collaborator-dot" style="background:${u.color}"></span>
-                ${u.name}
+                <span class="collaborator-dot" style="background:${sanitizeColor(u.color, "#888")}"></span>
+                ${escapeHtml(u.name)}
             </span>
         `)
         .join("")
@@ -146,8 +147,9 @@ async function init() {
         return
     }
 
-    const title = (data as any).title || "Untitled"
-    const savedLang: string = (data as any).language || "markdown"
+    const validated = data as { title: string; language: string }
+    const title = validated.title || "Untitled"
+    const savedLang = validated.language || "markdown"
 
     // Get display name
     let displayName = localStorage.getItem("collab-display-name")
@@ -164,7 +166,7 @@ async function init() {
     app.innerHTML = `
         <div class="editor-container">
             <div class="editor-topbar">
-                <span class="title">${title}</span>
+                <span class="title">${escapeHtml(title)}</span>
                 <div class="controls">
                     <select class="lang-select" id="lang-select">${langSelectOptions}</select>
                     <div class="collaborators"></div>

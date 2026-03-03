@@ -12,10 +12,15 @@ const MSG_AWARENESS = 1
 const PERSIST_DEBOUNCE_MS = 2_000
 const ROOM_UNLOAD_DELAY_MS = 30_000
 
+export interface WSConn {
+    send(data: Uint8Array | ArrayBuffer): void
+    close(code?: number, reason?: string): void
+}
+
 export interface Room {
     doc: Y.Doc
     awareness: Awareness
-    conns: Map<unknown, Set<number>>
+    conns: Map<WSConn, Set<number>>
 }
 
 const rooms = new Map<string, Room>()
@@ -53,8 +58,10 @@ function initRoom(slug: string): Room {
         for (const [conn] of room.conns) {
             if (conn !== origin) {
                 try {
-                    ;(conn as any).send(msg)
-                } catch {}
+                    conn.send(msg)
+                } catch (e) {
+                    console.debug("ws send failed:", e)
+                }
             }
         }
         schedulePersist(slug)
@@ -65,8 +72,8 @@ function initRoom(slug: string): Room {
         "update",
         ({ added, updated, removed }: { added: number[]; updated: number[]; removed: number[] }, origin: unknown) => {
             // Track controlled client IDs per connection
-            if (origin !== null && room.conns.has(origin)) {
-                const controlled = room.conns.get(origin)!
+            if (origin !== null && room.conns.has(origin as WSConn)) {
+                const controlled = room.conns.get(origin as WSConn)!
                 for (const id of added) controlled.add(id)
                 for (const id of removed) controlled.delete(id)
             }
@@ -79,8 +86,10 @@ function initRoom(slug: string): Room {
             for (const [conn] of room.conns) {
                 if (conn !== origin) {
                     try {
-                        ;(conn as any).send(msg)
-                    } catch {}
+                        conn.send(msg)
+                    } catch (e) {
+                        console.debug("ws send failed:", e)
+                    }
                 }
             }
         },
@@ -110,7 +119,7 @@ function persistRoom(slug: string) {
     persistTimers.delete(slug)
 }
 
-export function handleMessage(room: Room, ws: unknown, data: Uint8Array) {
+export function handleMessage(room: Room, ws: WSConn, data: Uint8Array) {
     const decoder = decoding.createDecoder(data)
     const msgType = decoding.readVarUint(decoder)
 
@@ -121,7 +130,7 @@ export function handleMessage(room: Room, ws: unknown, data: Uint8Array) {
             syncProtocol.readSyncMessage(decoder, encoder, room.doc, ws)
             const reply = encoding.toUint8Array(encoder)
             if (encoding.length(encoder) > 1) {
-                ;(ws as any).send(reply)
+                ws.send(reply)
             }
             break
         }
@@ -136,12 +145,12 @@ export function handleMessage(room: Room, ws: unknown, data: Uint8Array) {
     }
 }
 
-export function sendSyncStep1(room: Room, ws: unknown) {
+export function sendSyncStep1(room: Room, ws: WSConn) {
     // Send sync step 1
     const encoder = encoding.createEncoder()
     encoding.writeVarUint(encoder, MSG_SYNC)
     syncProtocol.writeSyncStep1(encoder, room.doc)
-    ;(ws as any).send(encoding.toUint8Array(encoder))
+    ws.send(encoding.toUint8Array(encoder))
 
     // Send current awareness states
     const states = room.awareness.getStates()
@@ -152,11 +161,11 @@ export function sendSyncStep1(room: Room, ws: unknown) {
             awarenessEncoder,
             encodeAwarenessUpdate(room.awareness, Array.from(states.keys())),
         )
-        ;(ws as any).send(encoding.toUint8Array(awarenessEncoder))
+        ws.send(encoding.toUint8Array(awarenessEncoder))
     }
 }
 
-export function removeConnection(slug: string, ws: unknown) {
+export function removeConnection(slug: string, ws: WSConn) {
     const room = rooms.get(slug)
     if (!room) return
 
@@ -198,8 +207,10 @@ export function bootRoom(slug: string) {
     if (!room) return
     for (const [conn] of room.conns) {
         try {
-            ;(conn as any).close(1000, "Document deleted")
-        } catch {}
+            conn.close(1000, "Document deleted")
+        } catch (e) {
+            console.debug("ws close failed:", e)
+        }
     }
     room.doc.destroy()
     rooms.delete(slug)
