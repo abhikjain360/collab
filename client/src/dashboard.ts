@@ -108,6 +108,7 @@ async function loadDocs() {
         `)
         .join("")
 
+    docList.removeEventListener("click", handleDocAction)
     docList.addEventListener("click", handleDocAction)
 }
 
