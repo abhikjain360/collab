@@ -112,7 +112,8 @@ async function loadDocs() {
 }
 
 async function handleDocAction(e: Event) {
-    const target = e.target as HTMLElement
+    const target = (e.target as HTMLElement).closest<HTMLElement>("[data-action]")
+    if (!target) return
     const action = target.dataset.action
     const slug = target.dataset.slug
     if (!action || !slug) return
