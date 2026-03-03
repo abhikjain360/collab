@@ -6,6 +6,8 @@ import { wsHandler } from "./routes/ws"
 
 const CORS_ORIGIN = process.env.CORS_ORIGIN || "https://collab.abhikja.in"
 const PORT = parseInt(process.env.PORT || "3000")
+const TLS_CERT_PATH = process.env.TLS_CERT_PATH
+const TLS_KEY_PATH = process.env.TLS_KEY_PATH
 
 const app = new Elysia()
     .onRequest(({ request, set }) => {
@@ -22,9 +24,19 @@ const app = new Elysia()
     .use(authRoutes)
     .use(docRoutes)
     .use(wsHandler)
-    .listen(PORT)
+    .listen(
+        TLS_CERT_PATH && TLS_KEY_PATH
+            ? {
+                  port: PORT,
+                  tls: {
+                      cert: Bun.file(TLS_CERT_PATH),
+                      key: Bun.file(TLS_KEY_PATH),
+                  },
+              }
+            : PORT,
+    )
 
-console.log(`collab server running on :${PORT}`)
+console.log(`collab server running on :${PORT}${TLS_CERT_PATH ? " (tls)" : ""}`)
 
 function shutdown() {
     console.log("shutting down, persisting rooms...")
