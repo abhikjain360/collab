@@ -25,6 +25,7 @@ RestartSec=5
 WantedBy=multi-user.target
 EOF
 
+sudo setcap 'cap_net_bind_service=+ep' "$PROJECT_DIR/dist/server/server"
 sudo systemctl daemon-reload
 sudo systemctl enable collab
 sudo systemctl restart collab
