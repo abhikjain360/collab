@@ -55,15 +55,15 @@ export async function verify<T = Record<string, unknown>>(
     const parts = token.split(".")
     if (parts.length !== 3) return null
     const [header, body, sig] = parts
-    const key = await getKey(secret)
-    const valid = await crypto.subtle.verify(
-        "HMAC",
-        key,
-        base64urlDecode(sig),
-        te.encode(`${header}.${body}`),
-    )
-    if (!valid) return null
     try {
+        const key = await getKey(secret)
+        const valid = await crypto.subtle.verify(
+            "HMAC",
+            key,
+            base64urlDecode(sig),
+            te.encode(`${header}.${body}`),
+        )
+        if (!valid) return null
         const decoded = JSON.parse(td.decode(base64urlDecode(body)))
         if (decoded.exp && Date.now() / 1000 > decoded.exp) return null
         return decoded as T

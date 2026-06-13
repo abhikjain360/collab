@@ -15,6 +15,6 @@
         "fmt:check": "dprint check"
     },
     "devDependencies": {
-        "@typescript/native-preview": "^7.0.0-dev.20260302.1"
+        "@typescript/native-preview": "^7.0.0-dev.20260613.1"
     }
 }

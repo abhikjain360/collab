@@ -181,7 +181,10 @@ function startInlineRename(slug: string, titleSpan: HTMLElement) {
 
     input.addEventListener("keydown", (e) => {
         if (e.key === "Enter") save()
-        if (e.key === "Escape") loadDocs()
+        if (e.key === "Escape") {
+            saved = true // cancel: prevent the blur handler from saving edits
+            loadDocs()
+        }
     })
     input.addEventListener("blur", save)
 }

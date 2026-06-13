@@ -120,28 +120,33 @@ function persistRoom(slug: string) {
 }
 
 export function handleMessage(room: Room, ws: WSConn, data: Uint8Array) {
-    const decoder = decoding.createDecoder(data)
-    const msgType = decoding.readVarUint(decoder)
+    try {
+        const decoder = decoding.createDecoder(data)
+        const msgType = decoding.readVarUint(decoder)
 
-    switch (msgType) {
-        case MSG_SYNC: {
-            const encoder = encoding.createEncoder()
-            encoding.writeVarUint(encoder, MSG_SYNC)
-            syncProtocol.readSyncMessage(decoder, encoder, room.doc, ws)
-            const reply = encoding.toUint8Array(encoder)
-            if (encoding.length(encoder) > 1) {
-                ws.send(reply)
+        switch (msgType) {
+            case MSG_SYNC: {
+                const encoder = encoding.createEncoder()
+                encoding.writeVarUint(encoder, MSG_SYNC)
+                syncProtocol.readSyncMessage(decoder, encoder, room.doc, ws)
+                const reply = encoding.toUint8Array(encoder)
+                if (encoding.length(encoder) > 1) {
+                    ws.send(reply)
+                }
+                break
             }
-            break
+            case MSG_AWARENESS: {
+                applyAwarenessUpdate(
+                    room.awareness,
+                    decoding.readVarUint8Array(decoder),
+                    ws,
+                )
+                break
+            }
         }
-        case MSG_AWARENESS: {
-            applyAwarenessUpdate(
-                room.awareness,
-                decoding.readVarUint8Array(decoder),
-                ws,
-            )
-            break
-        }
+    } catch (e) {
+        // Malformed message from a client — drop it rather than disrupt the room.
+        console.debug("ws message handling failed:", e)
     }
 }
 

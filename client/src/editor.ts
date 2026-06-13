@@ -8,7 +8,7 @@ import { javascript } from "@codemirror/lang-javascript"
 import { markdown } from "@codemirror/lang-markdown"
 import { python } from "@codemirror/lang-python"
 import { rust } from "@codemirror/lang-rust"
-import { indentUnit } from "@codemirror/language"
+import { indentUnit, LanguageSupport, StreamLanguage } from "@codemirror/language"
 import {
     bracketMatching,
     defaultHighlightStyle,
@@ -18,6 +18,8 @@ import {
     syntaxHighlighting,
 } from "@codemirror/language"
 import { languages } from "@codemirror/language-data"
+import { dockerFile } from "@codemirror/legacy-modes/mode/dockerfile"
+import { shell } from "@codemirror/legacy-modes/mode/shell"
 import { lintKeymap } from "@codemirror/lint"
 import { highlightSelectionMatches, searchKeymap } from "@codemirror/search"
 import { Compartment, EditorState } from "@codemirror/state"
@@ -40,7 +42,7 @@ import { escapeHtml, sanitizeColor } from "./utils"
 
 const app = document.getElementById("app")!
 
-const langOptions: Record<string, () => ReturnType<typeof markdown>> = {
+const langOptions: Record<string, () => LanguageSupport> = {
     "markdown": () => markdown({ codeLanguages: languages }),
     "typescript": () => javascript({ typescript: true }),
     "javascript": () => javascript(),
@@ -48,8 +50,8 @@ const langOptions: Record<string, () => ReturnType<typeof markdown>> = {
     "c": () => cpp(),
     "c++": () => cpp(),
     "rust": () => rust(),
-    "bash": () => languages.find(l => l.name === "Shell")?.support ?? markdown(),
-    "dockerfile": () => languages.find(l => l.name === "Dockerfile")?.support ?? markdown(),
+    "bash": () => new LanguageSupport(StreamLanguage.define(shell)),
+    "dockerfile": () => new LanguageSupport(StreamLanguage.define(dockerFile)),
 }
 
 function nameToColor(name: string): string {

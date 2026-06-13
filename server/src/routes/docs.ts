@@ -28,12 +28,16 @@ async function requireAdmin(cookie: Record<string, any>, set: any): Promise<bool
     return true
 }
 
-const createDocBody = z.object({ title: z.string().optional() })
-const renameDocBody = z.object({ title: z.string() })
-const validateTokenBody = z.object({ token: z.string() })
+const MAX_TITLE_LEN = 200
+const MAX_TOKEN_LEN = 256
+const MAX_LANGUAGE_LEN = 50
+
+const createDocBody = z.object({ title: z.string().max(MAX_TITLE_LEN).optional() })
+const renameDocBody = z.object({ title: z.string().min(1).max(MAX_TITLE_LEN) })
+const validateTokenBody = z.object({ token: z.string().max(MAX_TOKEN_LEN) })
 const setLanguageBody = z.object({
-    token: z.string(),
-    language: z.string(),
+    token: z.string().max(MAX_TOKEN_LEN),
+    language: z.string().min(1).max(MAX_LANGUAGE_LEN),
 })
 
 export const docRoutes = new Elysia({ prefix: "/api" })
